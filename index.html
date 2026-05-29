@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>The Oracle</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#121212">
+    
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1E1E1E;
+            --accent: #BB86FC; /* Material Dark Purple */
+            --text-primary: #E0E0E0;
+            --text-secondary: #A0A0A0;
+            --shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 90%;
+            max-width: 400px;
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        p.subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: -15px;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            background-color: #2C2C2C;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            box-shadow: var(--shadow);
+        }
+
+        button:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        #result-container {
+            margin-top: 20px;
+            min-height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #answer {
+            font-size: 2rem;
+            font-weight: 800;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-out;
+            transform: translateY(10px);
+        }
+
+        #answer.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Colors for different answers */
+        .ans-yes { color: #4CAF50; text-shadow: 0 0 10px rgba(76,175,80,0.5); }
+        .ans-no { color: #F44336; text-shadow: 0 0 10px rgba(244,67,54,0.5); }
+
+        /* Simple pulse animation while thinking */
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        .thinking {
+            color: var(--text-secondary);
+            animation: pulse 1s infinite;
+            font-size: 1.2rem !important;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1>THE ORACLE</h1>
+        <p class="subtitle">Seek your destiny...</p>
+        
+        <input type="text" id="question-input" placeholder="Ask a Yes/No question...">
+        
+        <button onclick="getPrediction()" id="predict-btn">Predict</button>
+
+        <div id="result-container">
+            <div id="answer"></div>
+        </div>
+    </div>
+
+    <script>
+        // Highly weighted towards clear Yes/No, with slight variation for flavor
+        const answers = [
+            { text: "YES", class: "ans-yes" },
+            { text: "NO", class: "ans-no" },
+            { text: "MOST LIKELY", class: "ans-yes" },
+            { text: "DEFINITELY NOT", class: "ans-no" },
+            { text: "SIGNS POINT TO YES", class: "ans-yes" },
+            { text: "DON'T COUNT ON IT", class: "ans-no" },
+            { text: "ABSOLUTELY", class: "ans-yes" },
+            { text: "VERY DOUBTFUL", class: "ans-no" }
+        ];
+
+        const inputField = document.getElementById('question-input');
+        const answerDisplay = document.getElementById('answer');
+        const button = document.getElementById('predict-btn');
+
+        function getPrediction() {
+            const question = inputField.value.trim();
+
+            if (question === "") {
+                alert("Please ask a question first!");
+                return;
+            }
+
+            // UI Feedback
+            inputField.blur(); // Hide keyboard on mobile
+            answerDisplay.classList.remove('show', 'ans-yes', 'ans-no', 'thinking');
+            answerDisplay.innerText = "Consulting spirits...";
+            answerDisplay.classList.add('thinking', 'show');
+            button.disabled = true;
+
+            // Simulate "thinking" time for better effect (1.5 seconds)
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * answers.length);
+                const prediction = answers[randomIndex];
+
+                answerDisplay.classList.remove('thinking');
+                answerDisplay.innerText = prediction.text;
+                answerDisplay.classList.add(prediction.class);
+                button.disabled = false;
+                
+                // Clear input for next question
+                inputField.value = "";
+            }, 1500);
+        }
+        
+        // Allow pressing 'Enter' to trigger prediction
+        inputField.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                getPrediction();
+            }
+        });
+
+        // Register Service Worker for PWA offline capability
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW Registered', reg))
+                    .catch(err => console.log('SW Registration failed', err));
+            });
+        }
+    </script>
+</body>
+</html>
