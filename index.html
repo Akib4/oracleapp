@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Nash Oracle</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        /* Cyberpunk / Synthwave Theme */
+        :root {
+            --bg: #050505;
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ea;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+        }
+        
+        /* VFX: Animated 3D Grid Background */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200vw;
+            height: 200vh;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.15) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            animation: gridMove 10s linear infinite;
+            z-index: -1;
+        }
+        
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(40px) translateZ(-200px); }
+        }
+        
+        .container {
+            background: rgba(10, 10, 10, 0.85);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.2);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        h1 {
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #333;
+            color: var(--neon-blue);
+            border-radius: 5px;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+        
+        input:focus {
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 15px rgba(255, 0, 234, 0.4);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: transparent;
+            color: var(--neon-pink);
+            border: 2px solid var(--neon-pink);
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(255, 0, 234, 0.2);
+            font-family: inherit;
+        }
+
+        button:hover {
+            background: var(--neon-pink);
+            color: #000;
+            box-shadow: 0 0 25px var(--neon-pink);
+        }
+
+        button:disabled {
+            border-color: #555;
+            color: #555;
+            box-shadow: none;
+            cursor: not-allowed;
+            background: transparent;
+        }
+
+        /* Settings Toggle */
+        .settings-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin-top: 20px;
+            text-decoration: underline;
+            box-shadow: none;
+            padding: 0;
+            width: auto;
+        }
+
+        #settings-panel {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #444;
+        }
+
+        /* VFX: Pulsating Computing Orb */
+        .orb {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--neon-blue) 0%, transparent 70%);
+            margin: 20px auto;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .orb.analyzing {
+            opacity: 1;
+            animation: pulseOrb 0.8s infinite alternate;
+        }
+
+        @keyframes pulseOrb {
+            0% { transform: scale(0.8); box-shadow: 0 0 10px var(--neon-blue); }
+            100% { transform: scale(1.5); box-shadow: 0 0 30px var(--neon-pink), 0 0 50px var(--neon-blue); }
+        }
+
+        #result-area {
+            margin-top: 10px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        #decision {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px currentColor;
+            letter-spacing: 2px;
+        }
+        .yes { color: #0f0; }
+        .no { color: #f00; }
+
+        #explanation {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #ccc;
+            text-align: left;
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+            border-left: 3px solid var(--neon-blue);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Nash Oracle</h1>
+        <div class="subtitle">Game Theory Predictive Analysis</div>
+        
+        <input type="text" id="question" placeholder="Enter a scenario to analyze...">
+        <button id="predict-btn" onclick="predict()">Analyze Matrix</button>
+
+        <div class="orb" id="orb"></div>
+
+        <div id="result-area">
+            <div id="decision"></div>
+            <div id="explanation"></div>
+        </div>
+
+        <button class="settings-btn" onclick="toggleSettings()">⚙️ Configure API Key</button>
+        <div id="settings-panel">
+            <input type="password" id="api-key" placeholder="Paste Google AI Studio API Key">
+            <button onclick="saveKey()" style="padding:10px; font-size:0.9rem;">Save Key</button>
+            <p style="font-size:0.7rem; color:#888; margin-top:10px;">Key is stored locally on your device.</p>
+        </div>
+    </div>
+
+    <script>
+        // Load API key from device storage on launch
+        window.onload = () => {
+            const savedKey = localStorage.getItem('gemini_api_key');
+            if (savedKey) document.getElementById('api-key').value = savedKey;
+            else document.getElementById('settings-panel').style.display = 'block';
+        };
+
+        function toggleSettings() {
+            const panel = document.getElementById('settings-panel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function saveKey() {
+            const key = document.getElementById('api-key').value.trim();
+            if(key) {
+                localStorage.setItem('gemini_api_key', key);
+                alert("API Key saved securely to your device.");
+                toggleSettings();
+            }
+        }
+
+        async function predict() {
+            const question = document.getElementById('question').value.trim();
+            const apiKey = localStorage.getItem('gemini_api_key');
+
+            if (!apiKey) {
+                alert("Please enter and save your Gemini API Key in the settings below.");
+                document.getElementById('settings-panel').style.display = 'block';
+                return;
+            }
+            if (!question) {
+                alert("Please input a scenario or question to analyze.");
+                return;
+            }
+
+            // Trigger UI VFX
+            const btn = document.getElementById('predict-btn');
+            const orb = document.getElementById('orb');
+            const decisionDiv = document.getElementById('decision');
+            const expDiv = document.getElementById('explanation');
+            
+            // Reset state
+            btn.disabled = true;
+            btn.innerText = "Computing Payoffs...";
+            decisionDiv.innerText = "";
+            expDiv.style.display = "none";
+            orb.classList.add('analyzing');
+            
+            // Hide keyboard on mobile
+            document.getElementById('question').blur(); 
+
+            // API Endpoint (Using gemini-3.5-flash for high speed & logic)
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
+            
+            // Prompt Engineering to enforce Game Theory logic
+            const prompt = `You are a strict, analytical Oracle powered by Game Theory. The user will provide a scenario or question. 
+            Step 1: Analyze the situation using game theory concepts (e.g., zero-sum, Nash Equilibrium, dominant strategy, expected utility).
+            Step 2: Predict the most statistically likely outcome as a definitive "YES" or "NO".
+            
+            Output format MUST be exactly:
+            Line 1: YES or NO
+            Line 2: A 2-sentence explanation of the prediction strictly using game theory terminology.
+            
+            User's query: "${question}"`;
+
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                if (!response.ok) throw new Error("API request failed. Verify your API key is correct.");
+
+                const data = await response.json();
+                const aiText = data.candidates[0].content.parts[0].text.trim();
+                
+                // Parse AI response
+                const lines = aiText.split('\n');
+                let decision = lines[0].trim().toUpperCase().replace(/[^A-Z]/g, '');
+                let explanation = lines.slice(1).join(' ').trim();
+                
+                // Fallback parsing just in case AI includes extra text
+                if (decision !== "YES" && decision !== "NO") {
+                    if (aiText.toUpperCase().includes("YES")) decision = "YES";
+                    else if (aiText.toUpperCase().includes("NO")) decision = "NO";
+                    else decision = "UNKNOWN";
+                    explanation = aiText; 
+                }
+
+                // Render Results
+                orb.classList.remove('analyzing');
+                decisionDiv.innerText = decision;
+                decisionDiv.className = decision === "YES" ? "yes" : "no";
+                expDiv.innerText = explanation;
+                expDiv.style.display = "block";
+
+            } catch (error) {
+                orb.classList.remove('analyzing');
+                expDiv.innerText = "Error: " + error.message;
+                expDiv.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Analyze Matrix";
+            }
+        }
+        
+        // Trigger calculation on "Enter" key press
+        document.getElementById('question').addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                predict();
+            }
+        });
+    </script>
+</body>
+</html>
